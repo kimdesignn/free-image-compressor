@@ -1,11 +1,318 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
     <title>Free Image Compressor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #020617;
+        --bg-light: #f8fafc;
+        --card: #020617;
+        --card-light: #ffffff;
+        --text: #e5e7eb;
+        --text-light: #020617;
+        --muted: #9ca3af;
+        --muted-light: #6b7280;
+        --accent: #22c55e;
+      }
+      html.dark {
+        --bg-current: var(--bg);
+        --card-current: var(--card);
+        --text-current: var(--text);
+        --muted-current: var(--muted);
+      }
+      html:not(.dark) {
+        --bg-current: var(--bg-light);
+        --card-current: var(--card-light);
+        --text-current: var(--text-light);
+        --muted-current: var(--muted-light);
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          sans-serif;
+        background: var(--bg-current);
+        color: var(--text-current);
+        display: flex;
+        flex-direction: column;
+      }
+      header,
+      footer {
+        padding: 0.75rem 1.5rem;
+        background: #020617;
+        color: #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      main {
+        flex: 1;
+        max-width: 960px;
+        margin: 1.5rem auto;
+        padding: 0 1.5rem 1.5rem;
+        width: 100%;
+      }
+      .grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr);
+      }
+      @media (max-width: 768px) {
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      .card {
+        border-radius: 1rem;
+        border: 1px solid #1f2937;
+        background: var(--card-current);
+        padding: 1.5rem;
+      }
+      .upload-card {
+        border-style: dashed;
+        text-align: center;
+        cursor: pointer;
+      }
+      .upload-title {
+        font-size: 1rem;
+        font-weight: 500;
+      }
+      .upload-subtitle {
+        font-size: 0.8rem;
+        color: var(--muted-current);
+        margin-top: 0.25rem;
+      }
+      .upload-file {
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+      }
+      .settings {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .settings h2 {
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .slider-label {
+        font-size: 0.8rem;
+        display: flex;
+        justify-content: space-between;
+      }
+      .slider-value {
+        font-weight: 600;
+      }
+      input[type="range"] {
+        width: 100%;
+      }
+      .primary-button {
+        margin-top: 0.75rem;
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border-radius: 0.75rem;
+        border: none;
+        background: var(--accent);
+        color: #022c22;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .primary-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .theme-toggle {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        border-radius: 999px;
+        border: 1px solid #4b5563;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      .hidden {
+        display: none;
+      }
+      .muted {
+        font-size: 0.8rem;
+        color: var(--muted-current);
+      }
+      .stats {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+      }
+      .stats strong {
+        font-weight: 600;
+      }
+    </style>
   </head>
   <body>
-    <h1>Free Image Compressor</h1>
-    <p>Your app is live. We will connect the real compressor backend next.</p>
+    <header>
+      <div>Free Image Compressor</div>
+      <button id="theme-toggle" class="theme-toggle">Toggle theme</button>
+    </header>
+
+    <main>
+      <div class="grid">
+        <div class="card upload-card" id="drop-zone">
+          <input id="file-input" type="file" accept="image/*" class="hidden" />
+          <p class="upload-title">Drag &amp; drop an image here</p>
+          <p class="upload-subtitle">or click to browse (max 10MB)</p>
+          <p id="file-name" class="upload-file hidden"></p>
+        </div>
+
+        <div class="card settings">
+          <h2>Compression settings</h2>
+          <label class="slider-label">
+            Quality: <span id="quality-value" class="slider-value">75</span>
+          </label>
+          <input id="quality" type="range" min="10" max="100" value="75" />
+          <button id="compress-btn" class="primary-button" disabled>
+            Compress &amp; Download
+          </button>
+          <div id="stats" class="stats hidden"></div>
+          <p class="muted">
+            Compression runs directly in your browser for v1. Server-side
+            backend, accounts, and history will come next.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <span class="muted">Light/dark, drag &amp; drop, client-side compression</span>
+    </footer>
+
+    <script>
+      (function () {
+        // Theme
+        const root = document.documentElement;
+        const storedTheme = window.localStorage.getItem("theme");
+        if (storedTheme === "light") root.classList.remove("dark");
+        else root.classList.add("dark");
+        document
+          .getElementById("theme-toggle")
+          .addEventListener("click", () => {
+            const isDark = root.classList.toggle("dark");
+            window.localStorage.setItem("theme", isDark ? "dark" : "light");
+          });
+
+        // Elements
+        const fileInput = document.getElementById("file-input");
+        const dropZone = document.getElementById("drop-zone");
+        const fileName = document.getElementById("file-name");
+        const qualityInput = document.getElementById("quality");
+        const qualityValue = document.getElementById("quality-value");
+        const compressBtn = document.getElementById("compress-btn");
+        const statsEl = document.getElementById("stats");
+
+        let currentFile = null;
+
+        function setFile(file) {
+          currentFile = file;
+          if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+              alert("Please choose a file smaller than 10MB.");
+              currentFile = null;
+              fileName.classList.add("hidden");
+              compressBtn.disabled = true;
+              return;
+            }
+            fileName.textContent = "Selected: " + file.name;
+            fileName.classList.remove("hidden");
+            compressBtn.disabled = false;
+            statsEl.classList.add("hidden");
+          } else {
+            fileName.classList.add("hidden");
+            compressBtn.disabled = true;
+          }
+        }
+
+        dropZone.addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", (e) => {
+          const f = e.target.files[0];
+          if (f) setFile(f);
+        });
+        dropZone.addEventListener("dragover", (e) => e.preventDefault());
+        dropZone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const f = e.dataTransfer.files[0];
+          if (f) setFile(f);
+        });
+
+        qualityInput.addEventListener("input", () => {
+          qualityValue.textContent = qualityInput.value;
+        });
+
+        compressBtn.addEventListener("click", () => {
+          if (!currentFile) return;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0);
+
+              const quality = Number(qualityInput.value) / 100;
+
+              canvas.toBlob(
+                (blob) => {
+                  if (!blob) {
+                    alert("Compression failed.");
+                    return;
+                  }
+                  const originalSize = currentFile.size;
+                  const compressedSize = blob.size;
+                  const saved = originalSize - compressedSize;
+                  const pct =
+                    originalSize > 0
+                      ? Math.round((saved / originalSize) * 100)
+                      : 0;
+
+                  statsEl.innerHTML =
+                    "<strong>Original:</strong> " +
+                    (originalSize / 1024).toFixed(1) +
+                    " KB<br><strong>Compressed:</strong> " +
+                    (compressedSize / 1024).toFixed(1) +
+                    " KB<br><strong>Saved:</strong> " +
+                    pct +
+                    "%";
+                  statsEl.classList.remove("hidden");
+
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  const name =
+                    "compressed-" +
+                    (currentFile.name.replace(/\.[^.]+$/, "") || "image") +
+                    ".jpg";
+                  a.href = url;
+                  a.download = name;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                },
+                "image/jpeg",
+                quality
+              );
+            };
+            img.onerror = () => {
+              alert("Could not load image for compression.");
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(currentFile);
+        });
+      })();
+    </script>
   </body>
 </html>
