@@ -1,238 +1,478 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>Free Image Compressor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       :root {
-        color-scheme: light dark;
-        --bg: #020617;
-        --bg-light: #f8fafc;
-        --card: #020617;
-        --card-light: #ffffff;
-        --text: #e5e7eb;
-        --text-light: #020617;
-        --muted: #9ca3af;
-        --muted-light: #6b7280;
-        --accent: #22c55e;
+        color-scheme: light;
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --card-soft: #fdfcfb;
+        --border-soft: #e5e7eb;
+        --text-main: #0f172a;
+        --text-muted: #6b7280;
+        --accent: #111827;
+        --accent-soft: #020617;
+        --accent-text: #f9fafb;
+        --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.12);
+        --radius-xl: 28px;
+        --radius-lg: 22px;
       }
-      html.dark {
-        --bg-current: var(--bg);
-        --card-current: var(--card);
-        --text-current: var(--text);
-        --muted-current: var(--muted);
-      }
-      html:not(.dark) {
-        --bg-current: var(--bg-light);
-        --card-current: var(--card-light);
-        --text-current: var(--text-light);
-        --muted-current: var(--muted-light);
-      }
-      * {
+
+      *,
+      *::before,
+      *::after {
         box-sizing: border-box;
-        margin: 0;
-        padding: 0;
       }
+
       body {
+        margin: 0;
         min-height: 100vh;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
           sans-serif;
-        background: var(--bg-current);
-        color: var(--text-current);
+        background: radial-gradient(circle at top left, #e0ecff 0, #f5f7fb 40%, #f5f7fb 100%);
+        color: var(--text-main);
         display: flex;
-        flex-direction: column;
-      }
-      header,
-      footer {
-        padding: 0.75rem 1.5rem;
-        background: #020617;
-        color: #e5e7eb;
-        display: flex;
-        justify-content: space-between;
+        justify-content: center;
         align-items: center;
+        padding: 24px;
       }
-      main {
-        flex: 1;
-        max-width: 960px;
-        margin: 1.5rem auto;
-        padding: 0 1.5rem 1.5rem;
+
+      .shell {
         width: 100%;
+        max-width: 1120px;
+        background: transparent;
       }
-      .grid {
+
+      .title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        padding: 4px 6px;
+      }
+
+      .app-title {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .pill {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.05);
+        color: var(--text-muted);
+      }
+
+      .layout {
         display: grid;
-        gap: 1rem;
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr);
+        grid-template-columns: minmax(0, 320px) minmax(0, 1.4fr);
+        gap: 28px;
       }
-      @media (max-width: 768px) {
-        .grid {
+
+      @media (max-width: 900px) {
+        body {
+          align-items: flex-start;
+        }
+        .layout {
           grid-template-columns: minmax(0, 1fr);
         }
       }
-      .card {
-        border-radius: 1rem;
-        border: 1px solid #1f2937;
-        background: var(--card-current);
-        padding: 1.5rem;
+
+      .panel {
+        background: var(--card);
+        border-radius: var(--radius-xl);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        padding: 20px 20px 22px;
+        box-shadow: 0 18px 40px rgba(148, 163, 184, 0.25);
       }
-      .upload-card {
-        border-style: dashed;
-        text-align: center;
-        cursor: pointer;
+
+      .panel h2 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 600;
       }
-      .upload-title {
-        font-size: 1rem;
-        font-weight: 500;
+
+      .panel-sub {
+        margin: 0 0 16px;
+        font-size: 12px;
+        color: var(--text-muted);
       }
-      .upload-subtitle {
-        font-size: 0.8rem;
-        color: var(--muted-current);
-        margin-top: 0.25rem;
-      }
-      .upload-file {
-        margin-top: 0.75rem;
-        font-size: 0.85rem;
-      }
-      .settings {
+
+      .field {
+        border-radius: 18px;
+        border: 1px solid var(--border-soft);
+        padding: 10px 14px;
+        background: #f9fafb;
+        margin-bottom: 14px;
         display: flex;
         flex-direction: column;
-        gap: 0.75rem;
+        gap: 3px;
       }
-      .settings h2 {
-        font-size: 0.9rem;
+
+      .field-label {
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .field-value {
+        font-size: 13px;
         font-weight: 500;
       }
-      .slider-label {
-        font-size: 0.8rem;
+
+      .slider-row {
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
       }
-      .slider-value {
-        font-weight: 600;
+
+      .slider-row span {
+        font-size: 11px;
+        color: var(--text-muted);
       }
+
+      .slider-row strong {
+        font-size: 13px;
+      }
+
       input[type="range"] {
         width: 100%;
+        accent-color: #2563eb;
       }
-      .primary-button {
-        margin-top: 0.75rem;
+
+      .hint-link {
+        margin-top: 2px;
+        font-size: 11px;
+        color: #64748b;
+      }
+
+      .hint-link span {
+        text-decoration: underline;
+        cursor: default;
+      }
+
+      .summary {
+        margin-top: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .summary-main {
+        font-size: 13px;
+        color: var(--text-main);
+        font-weight: 500;
+      }
+
+      .summary-nums {
+        text-align: right;
+      }
+
+      .summary-nums strong {
+        display: block;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-main);
+      }
+
+      .summary-nums span {
+        text-decoration: line-through;
+      }
+
+      .primary-btn {
+        margin-top: 16px;
         width: 100%;
-        padding: 0.6rem 0.75rem;
-        border-radius: 0.75rem;
-        border: none;
-        background: var(--accent);
-        color: #022c22;
-        font-weight: 600;
-        cursor: pointer;
-      }
-      .primary-button:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
-      .theme-toggle {
-        padding: 0.25rem 0.75rem;
-        font-size: 0.75rem;
         border-radius: 999px;
-        border: 1px solid #4b5563;
-        background: transparent;
-        color: inherit;
+        border: none;
+        padding: 12px 18px;
+        background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+        color: var(--accent-text);
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
         cursor: pointer;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.5);
       }
+
+      .primary-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .primary-btn-arrow {
+        font-size: 14px;
+        transform: translateX(1px);
+      }
+
+      /* Right preview card */
+
+      .preview-card {
+        background: radial-gradient(circle at top, #fef9f4 0, #fdfcfb 40%, #f9fafb 100%);
+        border-radius: var(--radius-xl);
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        padding: 18px 20px 18px;
+        box-shadow: var(--shadow-soft);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .preview-frame {
+        position: relative;
+        background: #e5e7eb;
+        border-radius: 24px;
+        overflow: hidden;
+        min-height: 260px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .preview-placeholder {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+
+      .preview-placeholder strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+        color: var(--text-main);
+      }
+
+      canvas {
+        max-width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .preview-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .preview-bar strong {
+        font-size: 12px;
+        color: var(--text-main);
+      }
+
+      .preview-meta {
+        display: flex;
+        gap: 18px;
+      }
+
+      .preview-tag {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.04);
+        color: #4b5563;
+      }
+
       .hidden {
-        display: none;
-      }
-      .muted {
-        font-size: 0.8rem;
-        color: var(--muted-current);
-      }
-      .stats {
-        margin-top: 0.5rem;
-        font-size: 0.8rem;
-      }
-      .stats strong {
-        font-weight: 600;
+        display: none !important;
       }
     </style>
   </head>
   <body>
-    <header>
-      <div>Free Image Compressor</div>
-      <button id="theme-toggle" class="theme-toggle">Toggle theme</button>
-    </header>
-
-    <main>
-      <div class="grid">
-        <div class="card upload-card" id="drop-zone">
-          <input id="file-input" type="file" accept="image/*" class="hidden" />
-          <p class="upload-title">Drag &amp; drop an image here</p>
-          <p class="upload-subtitle">or click to browse (max 10MB)</p>
-          <p id="file-name" class="upload-file hidden"></p>
-        </div>
-
-        <div class="card settings">
-          <h2>Compression settings</h2>
-          <label class="slider-label">
-            Quality: <span id="quality-value" class="slider-value">75</span>
-          </label>
-          <input id="quality" type="range" min="10" max="100" value="75" />
-          <button id="compress-btn" class="primary-button" disabled>
-            Compress &amp; Download
-          </button>
-          <div id="stats" class="stats hidden"></div>
-          <p class="muted">
-            Compression runs directly in your browser for v1. Server-side
-            backend, accounts, and history will come next.
-          </p>
-        </div>
+    <div class="shell">
+      <div class="title-row">
+        <div class="app-title">Compression Options</div>
+        <div class="pill">Free Image Compressor</div>
       </div>
-    </main>
 
-    <footer>
-      <span class="muted">Light/dark, drag &amp; drop, client-side compression</span>
-    </footer>
+      <div class="layout">
+        <!-- LEFT: controls -->
+        <section class="panel" aria-label="Compression settings">
+          <h2>Settings</h2>
+          <p class="panel-sub">Choose your resolution and compression level.</p>
+
+          <div class="field">
+            <div class="field-label">Resolution</div>
+            <div class="field-value" id="resolution-label">Original</div>
+          </div>
+
+          <div class="field">
+            <div class="slider-row">
+              <span>Compression</span>
+              <strong id="compression-percent">35%</strong>
+            </div>
+            <input id="quality" type="range" min="10" max="90" value="35" />
+            <div class="hint-link">
+              <span>Advanced settings</span>
+            </div>
+          </div>
+
+          <div class="summary">
+            <div>
+              <div class="summary-main">Estimated reduced size</div>
+              <div id="summary-note">Drop an image to estimate savings.</div>
+            </div>
+            <div class="summary-nums">
+              <strong id="size-estimate">– MB</strong>
+              <span id="size-original">– MB</span>
+            </div>
+          </div>
+
+          <button id="compress-btn" class="primary-btn" disabled>
+            <span>Compress File</span>
+            <span class="primary-btn-arrow">➜</span>
+          </button>
+        </section>
+
+        <!-- RIGHT: preview -->
+        <section class="preview-card" aria-label="Preview">
+          <div
+            class="preview-frame"
+            id="drop-zone"
+          >
+            <input
+              id="file-input"
+              type="file"
+              accept="image/*"
+              class="hidden"
+            />
+            <div id="placeholder" class="preview-placeholder">
+              <strong>Drop your image here</strong>
+              <span>or click anywhere in this area to browse a file.</span>
+            </div>
+            <canvas id="preview-canvas" class="hidden"></canvas>
+          </div>
+
+          <div class="preview-bar">
+            <div>
+              <strong id="file-name">No file selected</strong>
+              <div class="preview-meta">
+                <span id="file-size" class="preview-tag">–</span>
+                <span id="file-status" class="preview-tag">Waiting for file</span>
+              </div>
+            </div>
+            <div>
+              <div class="preview-meta">
+                <span id="stats-original" class="preview-tag hidden"></span>
+                <span id="stats-compressed" class="preview-tag hidden"></span>
+                <span id="stats-saved" class="preview-tag hidden"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
 
     <script>
       (function () {
-        // Theme
-        const root = document.documentElement;
-        const storedTheme = window.localStorage.getItem("theme");
-        if (storedTheme === "light") root.classList.remove("dark");
-        else root.classList.add("dark");
-        document
-          .getElementById("theme-toggle")
-          .addEventListener("click", () => {
-            const isDark = root.classList.toggle("dark");
-            window.localStorage.setItem("theme", isDark ? "dark" : "light");
-          });
-
-        // Elements
         const fileInput = document.getElementById("file-input");
         const dropZone = document.getElementById("drop-zone");
-        const fileName = document.getElementById("file-name");
+        const placeholder = document.getElementById("placeholder");
+        const canvas = document.getElementById("preview-canvas");
+        const ctx = canvas.getContext("2d");
+
+        const fileNameEl = document.getElementById("file-name");
+        const fileSizeEl = document.getElementById("file-size");
+        const fileStatusEl = document.getElementById("file-status");
+        const resolutionLabel = document.getElementById("resolution-label");
+
         const qualityInput = document.getElementById("quality");
-        const qualityValue = document.getElementById("quality-value");
+        const compressionPercent = document.getElementById("compression-percent");
+        const summaryNote = document.getElementById("summary-note");
+        const sizeEstimate = document.getElementById("size-estimate");
+        const sizeOriginal = document.getElementById("size-original");
+
         const compressBtn = document.getElementById("compress-btn");
-        const statsEl = document.getElementById("stats");
+
+        const statsOriginal = document.getElementById("stats-original");
+        const statsCompressed = document.getElementById("stats-compressed");
+        const statsSaved = document.getElementById("stats-saved");
 
         let currentFile = null;
 
+        function formatMB(bytes) {
+          return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+        }
+
+        function updateCompressionLabel() {
+          compressionPercent.textContent = qualityInput.value + "%";
+          if (!currentFile) return;
+          const q = Number(qualityInput.value) / 100;
+          const estimated = Math.max(currentFile.size * q, currentFile.size * 0.05);
+          sizeEstimate.textContent = formatMB(estimated);
+          sizeOriginal.textContent = formatMB(currentFile.size);
+          summaryNote.textContent = "Approximate result based on quality setting.";
+        }
+
+        qualityInput.addEventListener("input", updateCompressionLabel);
+
         function setFile(file) {
           currentFile = file;
-          if (file) {
-            if (file.size > 10 * 1024 * 1024) {
-              alert("Please choose a file smaller than 10MB.");
-              currentFile = null;
-              fileName.classList.add("hidden");
-              compressBtn.disabled = true;
-              return;
-            }
-            fileName.textContent = "Selected: " + file.name;
-            fileName.classList.remove("hidden");
-            compressBtn.disabled = false;
-            statsEl.classList.add("hidden");
-          } else {
-            fileName.classList.add("hidden");
+          if (!file) {
+            fileNameEl.textContent = "No file selected";
+            fileSizeEl.textContent = "–";
+            fileStatusEl.textContent = "Waiting for file";
+            canvas.classList.add("hidden");
+            placeholder.classList.remove("hidden");
             compressBtn.disabled = true;
+            sizeEstimate.textContent = "– MB";
+            sizeOriginal.textContent = "– MB";
+            summaryNote.textContent = "Drop an image to estimate savings.";
+            [statsOriginal, statsCompressed, statsSaved].forEach((e) =>
+              e.classList.add("hidden")
+            );
+            return;
           }
+
+          if (file.size > 10 * 1024 * 1024) {
+            alert("Please choose a file smaller than 10MB.");
+            setFile(null);
+            return;
+          }
+
+          fileNameEl.textContent = file.name;
+          fileSizeEl.textContent = formatMB(file.size);
+          fileStatusEl.textContent = "Ready to compress";
+          sizeOriginal.textContent = formatMB(file.size);
+          compressBtn.disabled = false;
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const maxWidth = 960;
+              const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+              canvas.width = img.width * scale;
+              canvas.height = img.height * scale;
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+              placeholder.classList.add("hidden");
+              canvas.classList.remove("hidden");
+
+              resolutionLabel.textContent =
+                Math.round(img.width) + " × " + Math.round(img.height);
+              updateCompressionLabel();
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+
+          [statsOriginal, statsCompressed, statsSaved].forEach((e) =>
+            e.classList.add("hidden")
+          );
         }
 
         dropZone.addEventListener("click", () => fileInput.click());
@@ -240,15 +480,14 @@
           const f = e.target.files[0];
           if (f) setFile(f);
         });
-        dropZone.addEventListener("dragover", (e) => e.preventDefault());
+
+        dropZone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+        });
         dropZone.addEventListener("drop", (e) => {
           e.preventDefault();
           const f = e.dataTransfer.files[0];
           if (f) setFile(f);
-        });
-
-        qualityInput.addEventListener("input", () => {
-          qualityValue.textContent = qualityInput.value;
         });
 
         compressBtn.addEventListener("click", () => {
@@ -258,15 +497,19 @@
           reader.onload = (e) => {
             const img = new Image();
             img.onload = () => {
-              const canvas = document.createElement("canvas");
-              canvas.width = img.width;
-              canvas.height = img.height;
-              const ctx = canvas.getContext("2d");
-              ctx.drawImage(img, 0, 0);
+              const maxWidth = 1920;
+              const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+              const width = img.width * scale;
+              const height = img.height * scale;
+
+              const tempCanvas = document.createElement("canvas");
+              const tctx = tempCanvas.getContext("2d");
+              tempCanvas.width = width;
+              tempCanvas.height = height;
+              tctx.drawImage(img, 0, 0, width, height);
 
               const quality = Number(qualityInput.value) / 100;
-
-              canvas.toBlob(
+              tempCanvas.toBlob(
                 (blob) => {
                   if (!blob) {
                     alert("Compression failed.");
@@ -280,15 +523,18 @@
                       ? Math.round((saved / originalSize) * 100)
                       : 0;
 
-                  statsEl.innerHTML =
-                    "<strong>Original:</strong> " +
-                    (originalSize / 1024).toFixed(1) +
-                    " KB<br><strong>Compressed:</strong> " +
-                    (compressedSize / 1024).toFixed(1) +
-                    " KB<br><strong>Saved:</strong> " +
-                    pct +
-                    "%";
-                  statsEl.classList.remove("hidden");
+                  statsOriginal.textContent = "Original: " + formatMB(originalSize);
+                  statsCompressed.textContent =
+                    "Compressed: " + formatMB(compressedSize);
+                  statsSaved.textContent = "Saved: " + pct + "%";
+
+                  [statsOriginal, statsCompressed, statsSaved].forEach((e) =>
+                    e.classList.remove("hidden")
+                  );
+
+                  sizeEstimate.textContent = formatMB(compressedSize);
+                  sizeOriginal.textContent = formatMB(originalSize);
+                  summaryNote.textContent = "Actual compressed size shown.";
 
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
@@ -305,13 +551,13 @@
                 quality
               );
             };
-            img.onerror = () => {
-              alert("Could not load image for compression.");
-            };
             img.src = e.target.result;
           };
           reader.readAsDataURL(currentFile);
         });
+
+        // Initialize slider label
+        updateCompressionLabel();
       })();
     </script>
   </body>
