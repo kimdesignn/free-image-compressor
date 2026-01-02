@@ -72,6 +72,8 @@
         display: grid;
         grid-template-columns: minmax(0, 320px) minmax(0, 1.4fr);
         gap: 28px;
+        /* keep global height stable */
+        align-items: stretch;
       }
 
       @media (max-width: 900px) {
@@ -224,6 +226,13 @@
         margin-top: 6px;
         font-size: 11px;
         color: var(--text-muted);
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+
+      .status-text:hover {
+        color: #4b5563;
       }
 
       /* Right preview card */
@@ -237,6 +246,8 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
+        /* keep card height stable */
+        min-height: 420px;
       }
 
       .preview-frame {
@@ -244,12 +255,18 @@
         background: #e5e7eb;
         border-radius: 24px;
         overflow: hidden;
-        min-height: 260px;
+        height: 360px; /* fixed viewport height */
         display: flex;
         align-items: center;
         justify-content: center;
         border: 2px dashed transparent;
         transition: border-color 0.12s ease, background-color 0.12s ease;
+      }
+
+      @media (max-width: 900px) {
+        .preview-frame {
+          height: 300px;
+        }
       }
 
       .preview-frame.drag-over {
@@ -273,6 +290,8 @@
 
       canvas {
         max-width: 100%;
+        max-height: 100%;
+        width: auto;
         height: auto;
         display: block;
       }
@@ -359,11 +378,11 @@
           </div>
 
           <button id="compress-btn" class="primary-btn" disabled>
-            <span id="compress-btn-label">Compress File</span>
+            <span id="compress-btn-label">Download compressed file</span>
             <span class="primary-btn-arrow">➜</span>
           </button>
           <div id="status-text" class="status-text">
-            Choose an image to get started.
+            Click here to choose an image to get started.
           </div>
         </section>
 
@@ -477,7 +496,7 @@
             compressBtn.disabled = true;
             resolutionLabel.textContent = "Waiting for image…";
             resetStats();
-            statusText.textContent = "Choose an image to get started.";
+            statusText.textContent = "Click here to choose an image to get started.";
             return;
           }
 
@@ -492,7 +511,8 @@
           fileStatusEl.textContent = "Ready to compress";
           sizeOriginal.textContent = formatMB(file.size);
           compressBtn.disabled = false;
-          statusText.textContent = "Adjust quality, then click “Compress File”.";
+          statusText.textContent =
+            "Click here if you want to pick a different image.";
 
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -517,6 +537,11 @@
           };
           reader.readAsDataURL(file);
         }
+
+        // Make status text a shortcut to choose file
+        statusText.addEventListener("click", () => {
+          fileInput.click();
+        });
 
         // Drag-and-drop handling with visual feedback
         dropZone.addEventListener("click", () => fileInput.click());
@@ -571,8 +596,9 @@
                   if (!blob) {
                     alert("Compression failed.");
                     compressBtn.disabled = false;
-                    compressBtnLabel.textContent = "Compress File";
-                    statusText.textContent = "Something went wrong. Try again.";
+                    compressBtnLabel.textContent = "Download compressed file";
+                    statusText.textContent =
+                      "Something went wrong. Click here to try again.";
                     return;
                   }
                   const originalSize = currentFile.size;
@@ -608,8 +634,9 @@
                   URL.revokeObjectURL(url);
 
                   compressBtn.disabled = false;
-                  compressBtnLabel.textContent = "Compress File";
-                  statusText.textContent = "Done! You can try another image.";
+                  compressBtnLabel.textContent = "Download compressed file";
+                  statusText.textContent =
+                    "Done! Click here to choose another image.";
                 },
                 "image/jpeg",
                 quality
