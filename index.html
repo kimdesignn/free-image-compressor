@@ -19,6 +19,7 @@
         --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.12);
         --radius-xl: 28px;
         --radius-lg: 22px;
+        --accent-blue: #2563eb;
       }
 
       *,
@@ -32,7 +33,7 @@
         min-height: 100vh;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
           sans-serif;
-        background: radial-gradient(circle at top left, #e0ecff 0, #f5f7fb 40%, #f5f7fb 100%);
+        background: radial-gradient(circle at top left, #e0ecff 0, #f5f7fb 38%, #f5f7fb 100%);
         color: var(--text-main);
         display: flex;
         justify-content: center;
@@ -43,7 +44,6 @@
       .shell {
         width: 100%;
         max-width: 1120px;
-        background: transparent;
       }
 
       .title-row {
@@ -86,7 +86,7 @@
       .panel {
         background: var(--card);
         border-radius: var(--radius-xl);
-        border: 1px solid rgba(148, 163, 184, 0.2);
+        border: 1px solid rgba(148, 163, 184, 0.18);
         padding: 20px 20px 22px;
         box-shadow: 0 18px 40px rgba(148, 163, 184, 0.25);
       }
@@ -111,7 +111,7 @@
         margin-bottom: 14px;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 4px;
       }
 
       .field-label {
@@ -124,36 +124,34 @@
         font-weight: 500;
       }
 
-      .slider-row {
+      .slider-label-row {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 6px;
+        align-items: baseline;
+        margin-bottom: 4px;
       }
 
-      .slider-row span {
+      .slider-main-label {
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .slider-badge {
         font-size: 11px;
         color: var(--text-muted);
       }
 
-      .slider-row strong {
-        font-size: 13px;
-      }
-
       input[type="range"] {
         width: 100%;
-        accent-color: #2563eb;
+        accent-color: var(--accent-blue);
       }
 
-      .hint-link {
-        margin-top: 2px;
+      .slider-caption-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
         font-size: 11px;
-        color: #64748b;
-      }
-
-      .hint-link span {
-        text-decoration: underline;
-        cursor: default;
+        color: var(--text-muted);
       }
 
       .summary {
@@ -203,10 +201,16 @@
         gap: 6px;
         cursor: pointer;
         box-shadow: 0 18px 40px rgba(15, 23, 42, 0.5);
+        transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.1s ease;
+      }
+
+      .primary-btn:not(:disabled):active {
+        transform: translateY(1px);
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4);
       }
 
       .primary-btn:disabled {
-        opacity: 0.45;
+        opacity: 0.5;
         cursor: not-allowed;
         box-shadow: none;
       }
@@ -214,6 +218,12 @@
       .primary-btn-arrow {
         font-size: 14px;
         transform: translateX(1px);
+      }
+
+      .status-text {
+        margin-top: 6px;
+        font-size: 11px;
+        color: var(--text-muted);
       }
 
       /* Right preview card */
@@ -238,12 +248,20 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        border: 2px dashed transparent;
+        transition: border-color 0.12s ease, background-color 0.12s ease;
+      }
+
+      .preview-frame.drag-over {
+        border-color: var(--accent-blue);
+        background-color: rgba(191, 219, 254, 0.3);
       }
 
       .preview-placeholder {
         text-align: center;
         color: var(--text-muted);
         font-size: 13px;
+        pointer-events: none;
       }
 
       .preview-placeholder strong {
@@ -265,6 +283,7 @@
         align-items: center;
         font-size: 11px;
         color: var(--text-muted);
+        gap: 12px;
       }
 
       .preview-bar strong {
@@ -274,7 +293,8 @@
 
       .preview-meta {
         display: flex;
-        gap: 18px;
+        flex-wrap: wrap;
+        gap: 8px;
       }
 
       .preview-tag {
@@ -287,6 +307,13 @@
 
       .hidden {
         display: none !important;
+      }
+
+      @media (max-width: 600px) {
+        .panel,
+        .preview-card {
+          border-radius: 20px;
+        }
       }
     </style>
   </head>
@@ -301,28 +328,29 @@
         <!-- LEFT: controls -->
         <section class="panel" aria-label="Compression settings">
           <h2>Settings</h2>
-          <p class="panel-sub">Choose your resolution and compression level.</p>
+          <p class="panel-sub">Upload a photo, adjust quality, and download a smaller file.</p>
 
           <div class="field">
             <div class="field-label">Resolution</div>
-            <div class="field-value" id="resolution-label">Original</div>
+            <div class="field-value" id="resolution-label">Waiting for image…</div>
           </div>
 
           <div class="field">
-            <div class="slider-row">
-              <span>Compression</span>
-              <strong id="compression-percent">35%</strong>
+            <div class="slider-label-row">
+              <div class="slider-main-label">Image quality</div>
+              <div class="slider-badge" id="quality-label">Balanced</div>
             </div>
-            <input id="quality" type="range" min="10" max="90" value="35" />
-            <div class="hint-link">
-              <span>Advanced settings</span>
+            <input id="quality" type="range" min="40" max="95" value="80" />
+            <div class="slider-caption-row">
+              <span>Smaller file</span>
+              <span>Better quality</span>
             </div>
           </div>
 
           <div class="summary">
             <div>
-              <div class="summary-main">Estimated reduced size</div>
-              <div id="summary-note">Drop an image to estimate savings.</div>
+              <div class="summary-main">Estimated compressed size</div>
+              <div id="summary-note">Drop an image to see the estimate.</div>
             </div>
             <div class="summary-nums">
               <strong id="size-estimate">– MB</strong>
@@ -331,17 +359,17 @@
           </div>
 
           <button id="compress-btn" class="primary-btn" disabled>
-            <span>Compress File</span>
+            <span id="compress-btn-label">Compress File</span>
             <span class="primary-btn-arrow">➜</span>
           </button>
+          <div id="status-text" class="status-text">
+            Choose an image to get started.
+          </div>
         </section>
 
         <!-- RIGHT: preview -->
-        <section class="preview-card" aria-label="Preview">
-          <div
-            class="preview-frame"
-            id="drop-zone"
-          >
+        <section class="preview-card" aria-label="Preview and drop zone">
+          <div class="preview-frame" id="drop-zone">
             <input
               id="file-input"
               type="file"
@@ -350,7 +378,7 @@
             />
             <div id="placeholder" class="preview-placeholder">
               <strong>Drop your image here</strong>
-              <span>or click anywhere in this area to browse a file.</span>
+              <span>or click this area to browse a file (max 10MB).</span>
             </div>
             <canvas id="preview-canvas" class="hidden"></canvas>
           </div>
@@ -389,12 +417,14 @@
         const resolutionLabel = document.getElementById("resolution-label");
 
         const qualityInput = document.getElementById("quality");
-        const compressionPercent = document.getElementById("compression-percent");
+        const qualityLabel = document.getElementById("quality-label");
         const summaryNote = document.getElementById("summary-note");
         const sizeEstimate = document.getElementById("size-estimate");
         const sizeOriginal = document.getElementById("size-original");
 
         const compressBtn = document.getElementById("compress-btn");
+        const compressBtnLabel = document.getElementById("compress-btn-label");
+        const statusText = document.getElementById("status-text");
 
         const statsOriginal = document.getElementById("stats-original");
         const statsCompressed = document.getElementById("stats-compressed");
@@ -406,17 +436,35 @@
           return (bytes / (1024 * 1024)).toFixed(2) + " MB";
         }
 
-        function updateCompressionLabel() {
-          compressionPercent.textContent = qualityInput.value + "%";
+        function describeQuality(value) {
+          const v = Number(value);
+          if (v <= 55) return "Smaller file";
+          if (v <= 80) return "Balanced";
+          return "High quality";
+        }
+
+        function updateQualityLabelAndEstimate() {
+          qualityLabel.textContent = describeQuality(qualityInput.value);
+
           if (!currentFile) return;
-          const q = Number(qualityInput.value) / 100;
+          const q = Number(qualityInput.value) / 100; // JPEG quality
           const estimated = Math.max(currentFile.size * q, currentFile.size * 0.05);
           sizeEstimate.textContent = formatMB(estimated);
           sizeOriginal.textContent = formatMB(currentFile.size);
-          summaryNote.textContent = "Approximate result based on quality setting.";
+          summaryNote.textContent =
+            "Approximate size based on quality setting. Higher quality = larger file.";
         }
 
-        qualityInput.addEventListener("input", updateCompressionLabel);
+        qualityInput.addEventListener("input", updateQualityLabelAndEstimate);
+
+        function resetStats() {
+          [statsOriginal, statsCompressed, statsSaved].forEach((e) =>
+            e.classList.add("hidden")
+          );
+          sizeEstimate.textContent = "– MB";
+          sizeOriginal.textContent = "– MB";
+          summaryNote.textContent = "Drop an image to see the estimate.";
+        }
 
         function setFile(file) {
           currentFile = file;
@@ -427,12 +475,9 @@
             canvas.classList.add("hidden");
             placeholder.classList.remove("hidden");
             compressBtn.disabled = true;
-            sizeEstimate.textContent = "– MB";
-            sizeOriginal.textContent = "– MB";
-            summaryNote.textContent = "Drop an image to estimate savings.";
-            [statsOriginal, statsCompressed, statsSaved].forEach((e) =>
-              e.classList.add("hidden")
-            );
+            resolutionLabel.textContent = "Waiting for image…";
+            resetStats();
+            statusText.textContent = "Choose an image to get started.";
             return;
           }
 
@@ -447,6 +492,7 @@
           fileStatusEl.textContent = "Ready to compress";
           sizeOriginal.textContent = formatMB(file.size);
           compressBtn.disabled = false;
+          statusText.textContent = "Adjust quality, then click “Compress File”.";
 
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -464,17 +510,15 @@
 
               resolutionLabel.textContent =
                 Math.round(img.width) + " × " + Math.round(img.height);
-              updateCompressionLabel();
+              updateQualityLabelAndEstimate();
+              resetStats();
             };
             img.src = e.target.result;
           };
           reader.readAsDataURL(file);
-
-          [statsOriginal, statsCompressed, statsSaved].forEach((e) =>
-            e.classList.add("hidden")
-          );
         }
 
+        // Drag-and-drop handling with visual feedback
         dropZone.addEventListener("click", () => fileInput.click());
         fileInput.addEventListener("change", (e) => {
           const f = e.target.files[0];
@@ -483,15 +527,28 @@
 
         dropZone.addEventListener("dragover", (e) => {
           e.preventDefault();
+          dropZone.classList.add("drag-over");
         });
+
+        ["dragleave", "dragend"].forEach((evt) => {
+          dropZone.addEventListener(evt, () => {
+            dropZone.classList.remove("drag-over");
+          });
+        });
+
         dropZone.addEventListener("drop", (e) => {
           e.preventDefault();
+          dropZone.classList.remove("drag-over");
           const f = e.dataTransfer.files[0];
           if (f) setFile(f);
         });
 
         compressBtn.addEventListener("click", () => {
           if (!currentFile) return;
+
+          compressBtn.disabled = true;
+          compressBtnLabel.textContent = "Compressing…";
+          statusText.textContent = "Compressing your image…";
 
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -513,6 +570,9 @@
                 (blob) => {
                   if (!blob) {
                     alert("Compression failed.");
+                    compressBtn.disabled = false;
+                    compressBtnLabel.textContent = "Compress File";
+                    statusText.textContent = "Something went wrong. Try again.";
                     return;
                   }
                   const originalSize = currentFile.size;
@@ -534,7 +594,7 @@
 
                   sizeEstimate.textContent = formatMB(compressedSize);
                   sizeOriginal.textContent = formatMB(originalSize);
-                  summaryNote.textContent = "Actual compressed size shown.";
+                  summaryNote.textContent = "These are the actual sizes after compression.";
 
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
@@ -546,6 +606,10 @@
                   a.download = name;
                   a.click();
                   URL.revokeObjectURL(url);
+
+                  compressBtn.disabled = false;
+                  compressBtnLabel.textContent = "Compress File";
+                  statusText.textContent = "Done! You can try another image.";
                 },
                 "image/jpeg",
                 quality
@@ -556,8 +620,8 @@
           reader.readAsDataURL(currentFile);
         });
 
-        // Initialize slider label
-        updateCompressionLabel();
+        // Initialize labels
+        updateQualityLabelAndEstimate();
       })();
     </script>
   </body>
