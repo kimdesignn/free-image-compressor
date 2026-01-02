@@ -9,7 +9,6 @@
         color-scheme: light;
         --bg: #f5f7fb;
         --card: #ffffff;
-        --card-soft: #fdfcfb;
         --border-soft: #e5e7eb;
         --text-main: #0f172a;
         --text-muted: #6b7280;
@@ -18,7 +17,6 @@
         --accent-text: #f9fafb;
         --shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.12);
         --radius-xl: 28px;
-        --radius-lg: 22px;
         --accent-blue: #2563eb;
       }
 
@@ -72,7 +70,6 @@
         display: grid;
         grid-template-columns: minmax(0, 320px) minmax(0, 1.4fr);
         gap: 28px;
-        /* keep global height stable */
         align-items: stretch;
       }
 
@@ -235,8 +232,6 @@
         color: #4b5563;
       }
 
-      /* Right preview card */
-
       .preview-card {
         background: radial-gradient(circle at top, #fef9f4 0, #fdfcfb 40%, #f9fafb 100%);
         border-radius: var(--radius-xl);
@@ -246,7 +241,6 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
-        /* keep card height stable */
         min-height: 420px;
       }
 
@@ -255,7 +249,7 @@
         background: #e5e7eb;
         border-radius: 24px;
         overflow: hidden;
-        height: 360px; /* fixed viewport height */
+        height: 360px; /* fixed viewport */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -294,34 +288,6 @@
         width: auto;
         height: auto;
         display: block;
-      }
-
-      .preview-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 11px;
-        color: var(--text-muted);
-        gap: 12px;
-      }
-
-      .preview-bar strong {
-        font-size: 12px;
-        color: var(--text-main);
-      }
-
-      .preview-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .preview-tag {
-        font-size: 11px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.04);
-        color: #4b5563;
       }
 
       .hidden {
@@ -368,8 +334,8 @@
 
           <div class="summary">
             <div>
-              <div class="summary-main">Estimated compressed size</div>
-              <div id="summary-note">Drop an image to see the estimate.</div>
+              <div class="summary-main">Compressed size</div>
+              <div id="summary-note">Drop an image to see the result.</div>
             </div>
             <div class="summary-nums">
               <strong id="size-estimate">– MB</strong>
@@ -386,7 +352,7 @@
           </div>
         </section>
 
-        <!-- RIGHT: preview -->
+        <!-- RIGHT: ONLY image box -->
         <section class="preview-card" aria-label="Preview and drop zone">
           <div class="preview-frame" id="drop-zone">
             <input
@@ -401,23 +367,6 @@
             </div>
             <canvas id="preview-canvas" class="hidden"></canvas>
           </div>
-
-          <div class="preview-bar">
-            <div>
-              <strong id="file-name">No file selected</strong>
-              <div class="preview-meta">
-                <span id="file-size" class="preview-tag">–</span>
-                <span id="file-status" class="preview-tag">Waiting for file</span>
-              </div>
-            </div>
-            <div>
-              <div class="preview-meta">
-                <span id="stats-original" class="preview-tag hidden"></span>
-                <span id="stats-compressed" class="preview-tag hidden"></span>
-                <span id="stats-saved" class="preview-tag hidden"></span>
-              </div>
-            </div>
-          </div>
         </section>
       </div>
     </div>
@@ -430,9 +379,6 @@
         const canvas = document.getElementById("preview-canvas");
         const ctx = canvas.getContext("2d");
 
-        const fileNameEl = document.getElementById("file-name");
-        const fileSizeEl = document.getElementById("file-size");
-        const fileStatusEl = document.getElementById("file-status");
         const resolutionLabel = document.getElementById("resolution-label");
 
         const qualityInput = document.getElementById("quality");
@@ -444,10 +390,6 @@
         const compressBtn = document.getElementById("compress-btn");
         const compressBtnLabel = document.getElementById("compress-btn-label");
         const statusText = document.getElementById("status-text");
-
-        const statsOriginal = document.getElementById("stats-original");
-        const statsCompressed = document.getElementById("stats-compressed");
-        const statsSaved = document.getElementById("stats-saved");
 
         let currentFile = null;
 
@@ -466,31 +408,25 @@
           qualityLabel.textContent = describeQuality(qualityInput.value);
 
           if (!currentFile) return;
-          const q = Number(qualityInput.value) / 100; // JPEG quality
-          const estimated = Math.max(currentFile.size * q, currentFile.size * 0.05);
-          sizeEstimate.textContent = formatMB(estimated);
+          const q = Number(qualityInput.value) / 100;
+          const approximate = Math.max(currentFile.size * q, currentFile.size * 0.25);
+          sizeEstimate.textContent = formatMB(approximate);
           sizeOriginal.textContent = formatMB(currentFile.size);
           summaryNote.textContent =
-            "Approximate size based on quality setting. Higher quality = larger file.";
+            "Approximate size based on quality. Higher quality = larger file.";
         }
 
         qualityInput.addEventListener("input", updateQualityLabelAndEstimate);
 
         function resetStats() {
-          [statsOriginal, statsCompressed, statsSaved].forEach((e) =>
-            e.classList.add("hidden")
-          );
           sizeEstimate.textContent = "– MB";
           sizeOriginal.textContent = "– MB";
-          summaryNote.textContent = "Drop an image to see the estimate.";
+          summaryNote.textContent = "Drop an image to see the result.";
         }
 
         function setFile(file) {
           currentFile = file;
           if (!file) {
-            fileNameEl.textContent = "No file selected";
-            fileSizeEl.textContent = "–";
-            fileStatusEl.textContent = "Waiting for file";
             canvas.classList.add("hidden");
             placeholder.classList.remove("hidden");
             compressBtn.disabled = true;
@@ -506,13 +442,11 @@
             return;
           }
 
-          fileNameEl.textContent = file.name;
-          fileSizeEl.textContent = formatMB(file.size);
-          fileStatusEl.textContent = "Ready to compress";
-          sizeOriginal.textContent = formatMB(file.size);
           compressBtn.disabled = false;
-          statusText.textContent =
-            "Click here if you want to pick a different image.";
+          sizeOriginal.textContent = formatMB(file.size);
+          sizeEstimate.textContent = "– MB";
+          summaryNote.textContent = "Move the slider, then download the compressed file.";
+          statusText.textContent = "Click here if you want to pick a different image.";
 
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -531,19 +465,16 @@
               resolutionLabel.textContent =
                 Math.round(img.width) + " × " + Math.round(img.height);
               updateQualityLabelAndEstimate();
-              resetStats();
             };
             img.src = e.target.result;
           };
           reader.readAsDataURL(file);
         }
 
-        // Make status text a shortcut to choose file
-        statusText.addEventListener("click", () => {
-          fileInput.click();
-        });
+        // Status text opens file picker
+        statusText.addEventListener("click", () => fileInput.click());
 
-        // Drag-and-drop handling with visual feedback
+        // Drag & drop
         dropZone.addEventListener("click", () => fileInput.click());
         fileInput.addEventListener("change", (e) => {
           const f = e.target.files[0];
@@ -568,6 +499,36 @@
           if (f) setFile(f);
         });
 
+        // Download + never-bigger logic
+        function updateStatsAndDownload(blob, originalSize, usedQualityLabel) {
+          const compressedSize = blob.size;
+          const saved = originalSize - compressedSize;
+          const pct =
+            originalSize > 0 ? Math.round((saved / originalSize) * 100) : 0;
+
+          sizeEstimate.textContent = formatMB(compressedSize);
+          sizeOriginal.textContent = formatMB(originalSize);
+
+          if (saved > 0) {
+            summaryNote.textContent =
+              "Saved " + pct + "% compared to the original (quality " + usedQualityLabel + ").";
+          } else {
+            summaryNote.textContent =
+              "Image was already optimized, so we kept it as close as possible to original size.";
+          }
+
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          const name =
+            "compressed-" +
+            (currentFile.name.replace(/\.[^.]+$/, "") || "image") +
+            ".jpg";
+          a.href = url;
+          a.download = name;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+
         compressBtn.addEventListener("click", () => {
           if (!currentFile) return;
 
@@ -590,64 +551,54 @@
               tempCanvas.height = height;
               tctx.drawImage(img, 0, 0, width, height);
 
-              const quality = Number(qualityInput.value) / 100;
-              tempCanvas.toBlob(
-                (blob) => {
-                  if (!blob) {
-                    alert("Compression failed.");
+              const originalSize = currentFile.size;
+              const startQuality = Number(qualityInput.value) / 100;
+              const minQuality = 0.4;
+
+              function attempt(q) {
+                tempCanvas.toBlob(
+                  (blob) => {
+                    if (!blob) {
+                      alert("Compression failed.");
+                      compressBtn.disabled = false;
+                      compressBtnLabel.textContent = "Download compressed file";
+                      statusText.textContent =
+                        "Something went wrong. Click here to try again.";
+                      return;
+                    }
+
+                    if (blob.size >= originalSize && q > minQuality) {
+                      // still bigger than original, try lower quality
+                      const nextQ = Math.max(minQuality, q - 0.15);
+                      attempt(nextQ);
+                      return;
+                    }
+
+                    // If still not smaller even at min quality, just return original
+                    if (blob.size >= originalSize && q <= minQuality) {
+                      updateStatsAndDownload(currentFile, originalSize, "original");
+                    } else {
+                      updateStatsAndDownload(blob, originalSize, q.toFixed(2));
+                    }
+
                     compressBtn.disabled = false;
                     compressBtnLabel.textContent = "Download compressed file";
                     statusText.textContent =
-                      "Something went wrong. Click here to try again.";
-                    return;
-                  }
-                  const originalSize = currentFile.size;
-                  const compressedSize = blob.size;
-                  const saved = originalSize - compressedSize;
-                  const pct =
-                    originalSize > 0
-                      ? Math.round((saved / originalSize) * 100)
-                      : 0;
+                      "Done! Click here to choose another image.";
+                  },
+                  "image/jpeg",
+                  q
+                );
+              }
 
-                  statsOriginal.textContent = "Original: " + formatMB(originalSize);
-                  statsCompressed.textContent =
-                    "Compressed: " + formatMB(compressedSize);
-                  statsSaved.textContent = "Saved: " + pct + "%";
-
-                  [statsOriginal, statsCompressed, statsSaved].forEach((e) =>
-                    e.classList.remove("hidden")
-                  );
-
-                  sizeEstimate.textContent = formatMB(compressedSize);
-                  sizeOriginal.textContent = formatMB(originalSize);
-                  summaryNote.textContent = "These are the actual sizes after compression.";
-
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  const name =
-                    "compressed-" +
-                    (currentFile.name.replace(/\.[^.]+$/, "") || "image") +
-                    ".jpg";
-                  a.href = url;
-                  a.download = name;
-                  a.click();
-                  URL.revokeObjectURL(url);
-
-                  compressBtn.disabled = false;
-                  compressBtnLabel.textContent = "Download compressed file";
-                  statusText.textContent =
-                    "Done! Click here to choose another image.";
-                },
-                "image/jpeg",
-                quality
-              );
+              attempt(startQuality);
             };
             img.src = e.target.result;
           };
           reader.readAsDataURL(currentFile);
         });
 
-        // Initialize labels
+        // Initial labels
         updateQualityLabelAndEstimate();
       })();
     </script>
