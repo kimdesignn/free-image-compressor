@@ -249,7 +249,7 @@
         background: #e5e7eb;
         border-radius: 24px;
         overflow: hidden;
-        height: 360px; /* fixed viewport */
+        height: 360px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -352,7 +352,7 @@
           </div>
         </section>
 
-        <!-- RIGHT: ONLY image box -->
+        <!-- RIGHT: preview box only -->
         <section class="preview-card" aria-label="Preview and drop zone">
           <div class="preview-frame" id="drop-zone">
             <input
@@ -373,6 +373,8 @@
 
     <script>
       (function () {
+        const API_BASE = "https://free-image-compressor-backend.onrender.com";
+
         const fileInput = document.getElementById("file-input");
         const dropZone = document.getElementById("drop-zone");
         const placeholder = document.getElementById("placeholder");
@@ -499,8 +501,7 @@
           if (f) setFile(f);
         });
 
-        // Download + never-bigger logic
-        function updateStatsAndDownload(blob, originalSize, usedQualityLabel) {
+        function updateStatsAndDownload(blob, originalSize, note) {
           const compressedSize = blob.size;
           const saved = originalSize - compressedSize;
           const pct =
@@ -509,12 +510,13 @@
           sizeEstimate.textContent = formatMB(compressedSize);
           sizeOriginal.textContent = formatMB(originalSize);
 
-          if (saved > 0) {
-            summaryNote.textContent =
-              "Saved " + pct + "% compared to the original (quality " + usedQualityLabel + ").";
+          if (note) {
+            summaryNote.textContent = note;
+          } else if (saved > 0) {
+            summaryNote.textContent = "Saved " + pct + "% compared to the original.";
           } else {
             summaryNote.textContent =
-              "Image was already optimized, so we kept it as close as possible to original size.";
+              "Image was already optimized; size changed by " + pct + "%.";
           }
 
           const url = URL.createObjectURL(blob);
@@ -529,73 +531,47 @@
           URL.revokeObjectURL(url);
         }
 
-        compressBtn.addEventListener("click", () => {
+        compressBtn.addEventListener("click", async () => {
           if (!currentFile) return;
 
           compressBtn.disabled = true;
           compressBtnLabel.textContent = "Compressing…";
-          statusText.textContent = "Compressing your image…";
+          statusText.textContent = "Sending your image to the server…";
 
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-              const maxWidth = 1920;
-              const scale = img.width > maxWidth ? maxWidth / img.width : 1;
-              const width = img.width * scale;
-              const height = img.height * scale;
+          try {
+            const form = new FormData();
+            form.append("file", currentFile);
+            form.append("quality", qualityInput.value);
+            form.append("format", "jpeg");
+            form.append("maxWidth", "1920");
 
-              const tempCanvas = document.createElement("canvas");
-              const tctx = tempCanvas.getContext("2d");
-              tempCanvas.width = width;
-              tempCanvas.height = height;
-              tctx.drawImage(img, 0, 0, width, height);
+            const res = await fetch(
+              API_BASE + "/api/images/compress",
+              { method: "POST", body: form }
+            );
 
-              const originalSize = currentFile.size;
-              const startQuality = Number(qualityInput.value) / 100;
-              const minQuality = 0.4;
+            if (!res.ok) {
+              throw new Error("Server error");
+            }
 
-              function attempt(q) {
-                tempCanvas.toBlob(
-                  (blob) => {
-                    if (!blob) {
-                      alert("Compression failed.");
-                      compressBtn.disabled = false;
-                      compressBtnLabel.textContent = "Download compressed file";
-                      statusText.textContent =
-                        "Something went wrong. Click here to try again.";
-                      return;
-                    }
+            const blob = await res.blob();
+            const originalSize = currentFile.size;
+            const note =
+              res.headers.get("X-Compression-Note") ||
+              "";
 
-                    if (blob.size >= originalSize && q > minQuality) {
-                      // still bigger than original, try lower quality
-                      const nextQ = Math.max(minQuality, q - 0.15);
-                      attempt(nextQ);
-                      return;
-                    }
-
-                    // If still not smaller even at min quality, just return original
-                    if (blob.size >= originalSize && q <= minQuality) {
-                      updateStatsAndDownload(currentFile, originalSize, "original");
-                    } else {
-                      updateStatsAndDownload(blob, originalSize, q.toFixed(2));
-                    }
-
-                    compressBtn.disabled = false;
-                    compressBtnLabel.textContent = "Download compressed file";
-                    statusText.textContent =
-                      "Done! Click here to choose another image.";
-                  },
-                  "image/jpeg",
-                  q
-                );
-              }
-
-              attempt(startQuality);
-            };
-            img.src = e.target.result;
-          };
-          reader.readAsDataURL(currentFile);
+            updateStatsAndDownload(blob, originalSize, note);
+            statusText.textContent =
+              "Done! Click here to choose another image.";
+          } catch (err) {
+            console.error(err);
+            alert("Compression failed. Please try again.");
+            statusText.textContent =
+              "Something went wrong. Click here to try again.";
+          } finally {
+            compressBtn.disabled = false;
+            compressBtnLabel.textContent = "Download compressed file";
+          }
         });
 
         // Initial labels
